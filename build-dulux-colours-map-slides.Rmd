@@ -146,9 +146,10 @@ Code on the next slide:
 
 + goes through all the unique placenames
 + appends as many x y coordinates as we have space for (due to the modifiers) from the geocoding results
-+ **In general best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly re-geocode and hit the OSM server)**
 
 ***
+
+**In general best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly re-geocode and hit the OSM server)**
 
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
@@ -202,12 +203,9 @@ st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 
 ## And at last a map!
 
-```{r}
-tmap_mode("view")
-tm_shape(st_read("nz.gpkg")) +
-  tm_borders() +
-  tm_shape(dulux_colours_sf) + 
-  tm_dots(col = "rgb")
+```{r message = FALSE, results = FALSE, echo = FALSE}
+tm_shape(st_read("nz.gpkg")) + tm_borders() +
+  tm_shape(dulux_colours_sf) + tm_dots(col = "rgb")
 ```
 
 # Better yet, Voronois
@@ -227,22 +225,24 @@ dulux_colours_vor <- dulux_colours_sf %>%
 st_write(dulux_colours_vor, "dulux-colours-vor.gpkg", delete_dsn = TRUE)
 ```
 
-## And map it
+***
 
-```{r}
+```{r include = FALSE}
 dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 ```
 
-***
-
-```{r}
+```{r echo = FALSE}
 tm_shape(dulux_colours_vor) + 
-  tm_polygons(col = "rgb", id = "placename", alpha = 0.75, border.col = "grey", lwd = 0.2) +
-  tm_basemap("Esri.WorldTopoMap")
+  tm_polygons(col = "rgb", id = "placename", alpha = 0.75, border.col = "grey", lwd = 0.2)
 ```
 
-# Credits and more
+# Thanks to
 
++ Maptime!
 + See [github.com/DOSull/dulux-colours-map](https://github.com/DOSull/dulux-colours-map) for the code
 + See the same place for other odds and ends I do (including my classes at Vic!)
-+ The R-spatial ecosystem
++ All the amazing people behind
+    + _R_ and _RStudio_
+    + `sf` and `tmap` (for basic geospatial)
+    + the _tidyverse_ package
+    + _RMarkdown_

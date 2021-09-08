@@ -13,7 +13,7 @@
 /* I don' like borders on images! */
 .reveal section img {
   border: 0px solid #333333;
-   box-shadow: none;
+  box-shadow: none;
 }
 
 .reveal p.attribution{
