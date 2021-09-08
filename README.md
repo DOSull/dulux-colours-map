@@ -3,6 +3,6 @@ This is just a demonstration of the flexibility of the R ecosystem for quickly p
 
 The [map](map) is a somewhat silly take on this [range of paints](https://www.dulux.co.nz/colour/colours-of-new-zealand).
 
-The R code used to make the map is in [this file](code/build-dulux-colours-map.R?raw=true).
+The R code used to make the map can be viewed [here](code/build-dulux-colours-map.md).
 
-The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of this script can be [viewed here](markdown-output).
+The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of [the code](code/build-dulux-colours-map.Rmd?raw=true) can be [viewed here](markdown-output).
