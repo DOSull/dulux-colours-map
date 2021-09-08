@@ -6,9 +6,12 @@ output:
   revealjs::revealjs_presentation:
     theme: simple
     transition: slide
+    incremental: TRUE
     css: extra-styles.css
     reveal_options:
       slideNumber: TRUE
+      loop: TRUE
+    center: TRUE
 ---
 
 # Libraries
@@ -95,10 +98,10 @@ The modifiers are
 paint_modifiers <- c("Half", "Quarter", "Double")
 ```
 
-## A tidy pipeline
-This is a nice way to clean this up (there are others...)
+## A _tidyverse_ pipeline
+Here's one way to clean this up (there are others...)
 
-What's nice is it demonstrates pipelines using `%>%`
+***
 
 ```{r eval = FALSE}
 df_colours_tidied <- df_colours %>%
@@ -133,7 +136,7 @@ write.csv(df_colours_tidied, "dulux-colours.csv", row.names = FALSE)
 ```
 
 # Build the spatial dataset
-Add `x` and `y` columns to our data for the coordinates&mdash;note that we reload from the saved file so as not to keep hitting the Dulux website
+Add `x` and `y` columns to our data for the coordinates---note that we reload from the saved file so as not to keep hitting the Dulux website
 
 ```{r}
 df_colours_tidied <- read.csv("dulux-colours.csv")
@@ -141,15 +144,15 @@ df_colours_tidied_xy <- df_colours_tidied %>%
   mutate(x = 0, y = 0)
 ```
 
-## Geocode with <span style="text-transform:lowercase">tmaptools::geocode_OSM</span>
-Code on the next slide:
+## Geocode with `tmaptools::geocode_OSM`
+Code on the next slide
 
 + goes through all the unique placenames
-+ appends as many x y coordinates as we have space for (due to the modifiers) from the geocoding results
++ appends as many `x` `y` coordinates as we have space for (due to the modifiers) from the geocoding results
 
 ***
 
-**In general best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly re-geocode and hit the OSM server)**
+**Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly hit the OSM server)**
 
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
@@ -179,14 +182,11 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
-# Making a map
-Get the geocoded dataset we made earlier
+# Make the dataframe into a `sf` dataset
 
-```{r}
+```{r echo = FALSE}
 dulux_colours <- read.csv("dulux-colours-xy.csv")
 ```
-
-## Make it into an `sf` point dataset
 
 ```{r}
 dulux_colours_sf <- st_as_sf(dulux_colours, 
@@ -211,7 +211,7 @@ tm_shape(st_read("nz.gpkg")) + tm_borders() +
 # Better yet, Voronois
 Points aren't really much fun 
 
-Instead, make up Voronois and clip to NZ
+Instead, make Voronoi polygons and clip to NZ
 
 ```{r eval = FALSE}
 dulux_colours_vor <- dulux_colours_sf %>%

@@ -560,10 +560,10 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <h2>Retrieve and save the colours</h2>
 <p>The loop on the next slide</p>
 <ul>
-<li>steps through the group names</li>
-<li>retrieves the relevant JSON file</li>
-<li>writes it out locally</li>
-<li>parses the key information into a data table</li>
+<li class="fragment">steps through the group names</li>
+<li class="fragment">retrieves the relevant JSON file</li>
+<li class="fragment">writes it out locally</li>
+<li class="fragment">parses the key information into a data table</li>
 </ul>
 </section>
 <section class="slide level2">
@@ -603,10 +603,12 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <p>The modifiers are</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>paint_modifiers <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Half&quot;</span>, <span class="st">&quot;Quarter&quot;</span>, <span class="st">&quot;Double&quot;</span>)</span></code></pre></div>
 </section>
-<section id="a-tidy-pipeline" class="slide level2">
-<h2>A tidy pipeline</h2>
-<p>This is a nice way to clean this up (there are others…)</p>
-<p>What’s nice is it demonstrates pipelines using <code>%&gt;%</code></p>
+<section id="a-tidyverse-pipeline" class="slide level2">
+<h2>A <em>tidyverse</em> pipeline</h2>
+<p>Here’s one way to clean this up (there are others…)</p>
+</section>
+<section class="slide level2">
+
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_colours_tidied <span class="ot">&lt;-</span> df_colours <span class="sc">%&gt;%</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="do">## remove some columns we won&#39;t be needing</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>id, <span class="sc">-</span>baseId, <span class="sc">-</span>woodType, <span class="sc">-</span>coats) <span class="sc">%&gt;%</span></span>
@@ -646,16 +648,16 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x =</span> <span class="dv">0</span>, <span class="at">y =</span> <span class="dv">0</span>)</span></code></pre></div>
 </section>
 <section id="geocode-with-tmaptoolsgeocode_osm" class="slide level2">
-<h2>Geocode with <span style="text-transform:lowercase">tmaptools::geocode_OSM</span></h2>
-<p>Code on the next slide:</p>
+<h2>Geocode with <code>tmaptools::geocode_OSM</code></h2>
+<p>Code on the next slide</p>
 <ul>
-<li>goes through all the unique placenames</li>
-<li>appends as many x y coordinates as we have space for (due to the modifiers) from the geocoding results</li>
+<li class="fragment">goes through all the unique placenames</li>
+<li class="fragment">appends as many <code>x</code> <code>y</code> coordinates as we have space for (due to the modifiers) from the geocoding results</li>
 </ul>
 </section>
 <section class="slide level2">
 
-<p><strong>In general best not to re-run this (it takes a good 10 minutes and it’s not good to repeatedly re-geocode and hit the OSM server)</strong></p>
+<p><strong>Best not to re-run this (it takes a good 10 minutes and it’s not good to repeatedly hit the OSM server)</strong></p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (placename <span class="cf">in</span> <span class="fu">unique</span>(df_colours_tidied_xy<span class="sc">$</span>placename)) {</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  address <span class="ot">&lt;-</span> <span class="fu">str_c</span>(placename, <span class="st">&quot;New Zealand&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;, &quot;</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  geocode <span class="ot">&lt;-</span> <span class="fu">geocode_OSM</span>(address, <span class="at">as.data.frame =</span> <span class="cn">TRUE</span>, <span class="at">return.first.only =</span> <span class="cn">FALSE</span>)</span>
@@ -681,23 +683,18 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(df_colours_tidied_xy, <span class="st">&quot;dulux-colours-xy.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </section></section>
 <section>
-<section id="making-a-map" class="title-slide slide level1">
-<h1>Making a map</h1>
-<p>Get the geocoded dataset we made earlier</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dulux_colours <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;dulux-colours-xy.csv&quot;</span>)</span></code></pre></div>
-</section>
-<section id="make-it-into-an-sf-point-dataset" class="slide level2">
-<h2>Make it into an <code>sf</code> point dataset</h2>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dulux_colours_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(dulux_colours, </span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>), <span class="co"># the columns with the coordinates</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span>       <span class="co"># the project EPSG:4326 for lng-lat</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">2193</span>) <span class="sc">%&gt;%</span> <span class="co"># convert to NZTM</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="do">## and make an RGB column</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rgb =</span> <span class="fu">rgb</span>(red <span class="sc">/</span> <span class="dv">255</span>, </span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                   green <span class="sc">/</span> <span class="dv">255</span>, </span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                   blue<span class="sc">/</span> <span class="dv">255</span>))</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(dulux_colours_sf, <span class="st">&quot;dulux-colours-pts.gpkg&quot;</span>, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<section id="make-the-dataframe-into-a-sf-dataset" class="title-slide slide level1">
+<h1>Make the dataframe into a <code>sf</code> dataset</h1>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dulux_colours_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(dulux_colours, </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>), <span class="co"># the columns with the coordinates</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span>       <span class="co"># the project EPSG:4326 for lng-lat</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">2193</span>) <span class="sc">%&gt;%</span> <span class="co"># convert to NZTM</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="do">## and make an RGB column</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rgb =</span> <span class="fu">rgb</span>(red <span class="sc">/</span> <span class="dv">255</span>, </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                   green <span class="sc">/</span> <span class="dv">255</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                   blue<span class="sc">/</span> <span class="dv">255</span>))</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(dulux_colours_sf, <span class="st">&quot;dulux-colours-pts.gpkg&quot;</span>, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>## Deleting source `dulux-colours-pts.gpkg&#39; using driver `GPKG&#39;
 ## Writing layer `dulux-colours-pts&#39; to data source 
 ##   `dulux-colours-pts.gpkg&#39; using driver `GPKG&#39;
@@ -712,15 +709,15 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <h1>Better yet, Voronois</h1>
 <p>Points aren’t really much fun</p>
 <p>Instead, make up Voronois and clip to NZ</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dulux_colours_vor <span class="ot">&lt;-</span> dulux_colours_sf <span class="sc">%&gt;%</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_union</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_voronoi</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_cast</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(dulux_colours_sf, <span class="at">left =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_intersection</span>(<span class="fu">st_read</span>(<span class="st">&quot;nz.gpkg&quot;</span>)) </span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(dulux_colours_vor, <span class="st">&quot;dulux-colours-vor.gpkg&quot;</span>, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dulux_colours_vor <span class="ot">&lt;-</span> dulux_colours_sf <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_union</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_voronoi</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_cast</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(dulux_colours_sf, <span class="at">left =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_intersection</span>(<span class="fu">st_read</span>(<span class="st">&quot;nz.gpkg&quot;</span>)) </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(dulux_colours_vor, <span class="st">&quot;dulux-colours-vor.gpkg&quot;</span>, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 </section>
 <section class="slide level2">
 
@@ -729,15 +726,15 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <section id="thanks-to" class="title-slide slide level1">
 <h1>Thanks to</h1>
 <ul>
-<li>Maptime!</li>
-<li>See <a href="https://github.com/DOSull/dulux-colours-map">github.com/DOSull/dulux-colours-map</a> for the code</li>
-<li>See the same place for other odds and ends I do (including my classes at Vic!)</li>
-<li>All the amazing people behind
+<li class="fragment">Maptime!</li>
+<li class="fragment">See <a href="https://github.com/DOSull/dulux-colours-map">github.com/DOSull/dulux-colours-map</a> for the code</li>
+<li class="fragment">See the same place for other odds and ends I do (including my classes at Vic!)</li>
+<li class="fragment">All the amazing people behind
 <ul>
-<li><em>R</em> and <em>RStudio</em></li>
-<li><code>sf</code> and <code>tmap</code> (for basic geospatial)</li>
-<li>the <em>tidyverse</em> package</li>
-<li><em>RMarkdown</em></li>
+<li class="fragment"><em>R</em> and <em>RStudio</em></li>
+<li class="fragment"><code>sf</code> and <code>tmap</code> (for basic geospatial)</li>
+<li class="fragment">the <em>tidyverse</em> package</li>
+<li class="fragment"><em>RMarkdown</em></li>
 </ul></li>
 </ul>
 </section>
@@ -757,7 +754,9 @@ document.getElementsByTagName('head')[0].appendChild(style);
         // Push each slide change to the browser history
         history: true,
         // Vertical centering of slides
-        center: false,
+        center: true,
+        // Loop the presentation
+        loop: true,
         // Transition style
         transition: 'slide', // none/fade/slide/convex/concave/zoom
         // Transition style for full page slide backgrounds
