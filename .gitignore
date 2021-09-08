@@ -1,0 +1,4 @@
+*.json
+.Rhistory
+.RData
+dulux-colours*
