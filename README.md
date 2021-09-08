@@ -5,4 +5,4 @@ The [map](https://dosull.github.io/dulux-colours-map/map/) is a somewhat silly t
 
 The R code used to make the map can be viewed [here](code/build-dulux-colours-map.md).
 
-The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of [the code](code/build-dulux-colours-map.Rmd?raw=true) can be [viewed here](https://dosull.github.io/dulux-colours-map/code/).
+The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of [the code](code/build-dulux-colours-map.Rmd) can be [viewed here](https://dosull.github.io/dulux-colours-map/code/).
