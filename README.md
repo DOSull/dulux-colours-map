@@ -5,4 +5,7 @@ The [map](https://dosull.github.io/dulux-colours-map/map/) is a somewhat silly t
 
 The R code used to make the map can be viewed [here](code/build-dulux-colours-map.md).
 
-The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of [the code](code/build-dulux-colours-map.Rmd) can be [viewed here](https://dosull.github.io/dulux-colours-map/code/).
+The annotated output from the [RMarkdown](https://rmarkdown.rstudio.com/) of [the code](build-dulux-colours-map.Rmd) can be [viewed here](https://dosull.github.io/dulux-colours-map/code/).
+
+## Maptime slides
+I made [some slides](https://dosull.github.io/dulux-colours-map/slides/) from the code again using RMarkdown&mdash;a nice thing to learn more about!
