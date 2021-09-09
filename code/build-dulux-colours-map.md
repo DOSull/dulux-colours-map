@@ -1,104 +1,124 @@
 ---
-title: "A web map of the Dulux colours of New Zealand"
+title: "Building a web map of the Dulux colours of New Zealand using R"
+author: "David O'Sullivan"
+date: September 2021
 output: html_document
 ---
 
-# Build a web map of the Dulux colours of New Zealand
+# Libraries
+We need a bunch of these...
 
-## Libraries
+## JSON processing
+First `jsonlite` for processing the colours data pulled from the website
 
-We need a bunch of these. First `jsonlite` for processing the colours data pulled from the website.
-
-```{r message = FALSE}
-library(jsonlite) # for processing the JSON files of colours
+```{r}
+library(jsonlite)
 ```
 
-Next, a bunch of data munging packages from the tidyverse.
+## Data wrangling
+Next, a bunch of data munging packages from the 'tidyverse'
 
-```{r message = FALSE}
-library(plyr)     # rbind.fill is super useful for ragged data with missing rows
+```{r}
+library(plyr) # rbind.fill is useful for ragged data with missing entries
 library(dplyr)  
 library(magrittr)
 library(tibble)
-library(stringr) 
+library(stringr)
 ```
 
-And finally R spatial packages.
+## Spatial
+And finally the R (vector) spatial packages
 
-```{r message = FALSE}
+```{r}
 library(sf)
 library(tmap)
-library(tmaptools) # geocoding
+library(tmaptools) # for geocode_OSM
+tmap_mode("view")
 ```
 
-## Getting the colours
+# Getting the colours
 
-See [this website](https://www.dulux.co.nz/colour/colours-of-new-zealand) for what this is all about. Prior to building this notebook I had a poke around on the website to figure out where the colour details were to be found.
+See [the Dulux website](https://www.dulux.co.nz/colour/colours-of-new-zealand) for what this is all about
+
+First I had a poke around on the website to figure out where the colour details were to be found
 
 ```{r}
 colour_groups <- c("blues", "browns", "greens", "greys", "oranges",
                   "purples", "reds", "whites-neutrals", "yellows")
 base_url <- "https://www.dulux.co.nz/content/duluxnz/home/colour/all-colours.categorycolour.json/all-colours/"
-colour_sets <- str_c(base_url, colour_groups)
 ```
 
-The loop below, steps through the group names, retrieves the relevant JSON file from the web, writes it out locally, and parses the key information into a data table.
+## Retrieve and save the colours
+The loop on the next slide
+
++ steps through the group names
++ retrieves the relevant JSON file
++ writes it out locally
++ adds the colours information to a list
++ then we make the list into a single table using `bind_rows`
+
+***
 
 ```{r eval = FALSE}
-df_colours <- NULL
-for (group in colour_groups) {
-  source <- str_c(base_url, group)
-  file_name <- str_c(group, ".json")
-  json <- fromJSON(source, flatten = TRUE)
-  write_json(json, file_name)
+colours <- list()
+for (i in 1:length(colour_groups)) {
+  colour_group <- colour_groups[i]
+  json_url <- str_c(base_url, colour_group)
+  json_file_name <- str_c(colour_group, ".json")
+  json <- fromJSON(json_url, flatten = TRUE)
+  # make a local copy (just for convenience)
+  write_json(json, json_file_name)
+  # get the colours information and add to list
   the_colours <- rbind.fill(json$categoryColours$masterColour.colours)
-  if (is.null(df_colours)) {
-    df_colours <- the_colours
-  } else {
-    df_colours <- bind_rows(df_colours, the_colours)
-  }
-  Sys.sleep(0.5)  
+  colours[[i]] <- the_colours
+  Sys.sleep(0.5) # pause to not annoy the the server  
 }
+df_colours <- bind_rows(colours)
 write.csv(df_colours, "dulux-colours-raw.csv", row.names = FALSE)
 ```
 
-We can check what we got
-
+## Check we're all good
 ```{r}
 df_colours <- read.csv("dulux-colours-raw.csv")
 head(df_colours)
 ```
 
-## Tidying up the names
-There are paints with various modifiers as suffixes to specify slightly different shades of particular colours.
+# Tidying up the names
+There are paint names with modifiers as suffixes for different shades of particular colours, and we need to handle this
 
+The modifiers are
 ```{r}
 paint_modifiers <- c("Half", "Quarter", "Double")
 ```
 
-A tidy pipeline is a nice way to clean this up. There are other ways (like writing a function, but it's nice to show it using just built-in tidy operations).
+## A _tidyverse_ pipeline
+Here’s one way to clean this up (there are others…)
 
 ```{r eval = FALSE}
 df_colours_tidied <- df_colours %>%
   ## remove some columns we won't be needing
   select(-id, -baseId, -woodType, -coats) %>%
   ## separate the name components, filling from the left with NAs if <5
-  separate(name, into = c("p1", "p2", "p3", "p4", "p5"), sep = " ", 
+  separate(name, into = c("p1", "p2", "p3", "p4", "p5"), sep = " ",
            remove = FALSE, fill = "left") %>%
   ## replace any NAs with an empty string
   mutate(p1 = str_replace_na(p1, ""),
          p2 = str_replace_na(p2, ""),
          p3 = str_replace_na(p3, ""),
          p4 = str_replace_na(p4, "")) %>%
-  ## if p5 is a paint modifiers, then recompose name from p1:p4 else from p1:p5
+  ## if p5 is a paint modifiers, then recompose name
+  ## from p1:p4 else from p1:p5
   ## similarly keep modifier where it exists
-  mutate(placename = if_else(p5 %in% paint_modifiers, 
-                             str_trim(str_c(p1, p2, p3, p4, sep = " ")), 
-                             str_trim(str_c(p1, p2, p3, p4, p5, sep = " "))),
-         modifier = if_else(p5 %in% paint_modifiers, 
-                            p5, "")) %>%
-  ## remove some places that are kind of awkward to deal with later
-  filter(!placename %in% c("Chatham Islands", "Passage Rock", "Auckland Islands", "Cossack Rock")) %>%
+  mutate(placename = if_else(p5 %in% paint_modifiers,
+                       str_trim(str_c(p1, p2, p3, p4, sep = " ")),
+                       str_trim(str_c(p1, p2, p3, p4, p5, sep = " "))),
+         modifier = if_else(p5 %in% paint_modifiers,
+                       p5, "")) %>%
+  ## remove some places that are tricky to deal with later
+  filter(!placename %in% c("Chatham Islands",
+                           "Passage Rock",
+                           "Auckland Islands",
+                           "Cossack Rock")) %>%
   ## throw away variables we no longer and reorder
   select(name, placename, modifier, red, green, blue)
 
@@ -106,9 +126,8 @@ df_colours_tidied <- df_colours %>%
 write.csv(df_colours_tidied, "dulux-colours.csv", row.names = FALSE)
 ```
 
-## Build the spatial dataset
-
-Add x and y columns to our data for the coordinates - note that we re-load from the saved file so as not to repeat hitting the Dulux website.
+# Build the spatial dataset
+Add `x` and `y` columns to our data for the coordinates---note that we reload from the saved file so as not to keep hitting the Dulux website
 
 ```{r}
 df_colours_tidied <- read.csv("dulux-colours.csv")
@@ -116,9 +135,15 @@ df_colours_tidied_xy <- df_colours_tidied %>%
   mutate(x = 0, y = 0)
 ```
 
-Go through all the unique names, and append as many x y coordinates as we have space for (due to the modifiers) from the geocoding results.
+## Geocode with `tmaptools::geocode_OSM`
+Code on the next slide:
 
-**In general best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly re-geocode and hit the OSM server).**
++ goes through all the unique placenames
++ appends as many `x` `y` coordinates as we have space for (due to the modifiers) from the geocoding results
+
+***
+
+**Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly geocode and hit the OSM server)**
 
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
@@ -129,8 +154,8 @@ for (placename in unique(df_colours_tidied_xy$placename)) {
   for (i in 1:length(matching_rows)) {
     if (!is.null(geocode)) {
       if (num_geocodes >= i) {
-        df_colours_tidied_xy[matching_rows[i], ]$x <- geocode$lon[i] 
-        df_colours_tidied_xy[matching_rows[i], ]$y <- geocode$lat[i] 
+        df_colours_tidied_xy[matching_rows[i], ]$x <- geocode$lon[i]
+        df_colours_tidied_xy[matching_rows[i], ]$y <- geocode$lat[i]
       }  
     }
   }
@@ -138,7 +163,8 @@ for (placename in unique(df_colours_tidied_xy$placename)) {
 }
 ```
 
-Do another tidy up removing anything that didn't get geocoded.
+## Remove anything we missed
+Another tidy up removing anything that didn't get geocoded
 
 ```{r eval = FALSE}
 df_colours_tidied_xy <- df_colours_tidied_xy %>%
@@ -147,53 +173,85 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
-## Making a map
-Get the geocoded dataset we made earlier.
+# Making a map
+Get the geocoded dataset we made earlier
 
 ```{r}
 dulux_colours <- read.csv("dulux-colours-xy.csv")
 ```
 
-Now make it into an `sf` point dataset
+Make the dataframe into a `sf` point dataset
 
 ```{r}
-dulux_colours_sf <- st_as_sf(dulux_colours, coords = c("x", "y"), crs = 4326) %>%
-  st_transform(2193) %>%
-  mutate(rgb = rgb(red / 255, 
-                   green / 255, 
+dulux_colours_sf <- st_as_sf(dulux_colours,
+                     coords = c("x", "y"), # columns with the coordinates
+                     crs = 4326) %>%       # EPSG:4326 for lng-lat
+  st_transform(2193) %>% # convert to NZTM
+  ## and make an RGB column
+  mutate(rgb = rgb(red / 255,
+                   green / 255,
                    blue/ 255))
+
+# jitter any duplicate locations
+duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
+                       duplicated(dulux_colours_sf$geometry, fromLast = TRUE))
+jittered_pts <- dulux_colours_sf %>%
+  slice(duplicate_pts) %>%
+  st_jitter(50)
+dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
 
-And at last a map!
+## And at last a map!
 
 ```{r}
-tmap_mode("view")
-tm_shape(dulux_colours_sf) + 
-  tm_dots()
+nz <- st_read("nz.gpkg")
 ```
 
-## Better yet, Voronois
-
-Now make up voronois and clip to NZ.
-
 ```{r}
+tm_shape(nz) +
+  tm_borders() +
+  tm_shape(dulux_colours_sf) +
+  tm_dots(col = "rgb")
+```
+
+# Better yet, Voronois
+Points aren't really much fun
+
+Instead, make up Voronois and clip to NZ
+
+```{r eval = FALSE}
 dulux_colours_vor <- dulux_colours_sf %>%
   st_union() %>%
   st_voronoi() %>%
   st_cast() %>%
   st_as_sf() %>%
   st_join(dulux_colours_sf, left = FALSE) %>%
-  st_intersection(st_read("nz.gpkg")) 
+  st_intersection(st_read("nz.gpkg"))
 
 st_write(dulux_colours_vor, "dulux-colours-vor.gpkg", delete_dsn = TRUE)
 ```
 
-And map it
+## And map it
 
 ```{r}
-tm_shape(dulux_colours_vor) + 
+dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
+```
+
+```{r}
+tm_shape(dulux_colours_vor) +
   tm_polygons(col = "rgb", id = "placename", alpha = 0.75, border.col = "grey", lwd = 0.2) +
   tm_basemap("Esri.WorldTopoMap")
 ```
+
+# Credits and more
+
++ Maptime!
++ See [github.com/DOSull/dulux-colours-map](https://github.com/DOSull/dulux-colours-map) for the code
++ See the same place for other odds and ends I do (including my classes at Vic!)
++ All the amazing people behind:
+    + _R_ and _RStudio
+    + `sf` and `tmap` (for basic geospatial)
+    + the _tidyverse_ packages
+    + _RMarkdown_
