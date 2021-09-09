@@ -23,7 +23,7 @@ library(plyr) # rbind.fill is useful for ragged data with missing entries
 library(dplyr)  
 library(magrittr)
 library(tibble)
-library(stringr) 
+library(stringr)
 ```
 
 ## Spatial
@@ -51,10 +51,10 @@ base_url <- "https://www.dulux.co.nz/content/duluxnz/home/colour/all-colours.cat
 ## Retrieve and save the colours
 The loop on the next slide
 
-+ steps through the group names 
++ steps through the group names
 + retrieves the relevant JSON file
 + writes it out locally
-+ adds the colours information to a list 
++ adds the colours information to a list
 + then we make the list into a single table using `bind_rows`
 
 ***
@@ -99,25 +99,25 @@ df_colours_tidied <- df_colours %>%
   ## remove some columns we won't be needing
   select(-id, -baseId, -woodType, -coats) %>%
   ## separate the name components, filling from the left with NAs if <5
-  separate(name, into = c("p1", "p2", "p3", "p4", "p5"), sep = " ", 
+  separate(name, into = c("p1", "p2", "p3", "p4", "p5"), sep = " ",
            remove = FALSE, fill = "left") %>%
   ## replace any NAs with an empty string
   mutate(p1 = str_replace_na(p1, ""),
          p2 = str_replace_na(p2, ""),
          p3 = str_replace_na(p3, ""),
          p4 = str_replace_na(p4, "")) %>%
-  ## if p5 is a paint modifiers, then recompose name 
+  ## if p5 is a paint modifiers, then recompose name
   ## from p1:p4 else from p1:p5
   ## similarly keep modifier where it exists
-  mutate(placename = if_else(p5 %in% paint_modifiers, 
-                       str_trim(str_c(p1, p2, p3, p4, sep = " ")), 
+  mutate(placename = if_else(p5 %in% paint_modifiers,
+                       str_trim(str_c(p1, p2, p3, p4, sep = " ")),
                        str_trim(str_c(p1, p2, p3, p4, p5, sep = " "))),
-         modifier = if_else(p5 %in% paint_modifiers, 
+         modifier = if_else(p5 %in% paint_modifiers,
                        p5, "")) %>%
   ## remove some places that are tricky to deal with later
-  filter(!placename %in% c("Chatham Islands", 
-                           "Passage Rock", 
-                           "Auckland Islands", 
+  filter(!placename %in% c("Chatham Islands",
+                           "Passage Rock",
+                           "Auckland Islands",
                            "Cossack Rock")) %>%
   ## throw away variables we no longer and reorder
   select(name, placename, modifier, red, green, blue)
@@ -154,8 +154,8 @@ for (placename in unique(df_colours_tidied_xy$placename)) {
   for (i in 1:length(matching_rows)) {
     if (!is.null(geocode)) {
       if (num_geocodes >= i) {
-        df_colours_tidied_xy[matching_rows[i], ]$x <- geocode$lon[i] 
-        df_colours_tidied_xy[matching_rows[i], ]$y <- geocode$lat[i] 
+        df_colours_tidied_xy[matching_rows[i], ]$x <- geocode$lon[i]
+        df_colours_tidied_xy[matching_rows[i], ]$y <- geocode$lat[i]
       }  
     }
   }
@@ -183,14 +183,12 @@ dulux_colours <- read.csv("dulux-colours-xy.csv")
 Make the dataframe into a `sf` point dataset
 
 ```{r}
-dulux_colours_sf <- st_as_sf(dulux_colours, 
+dulux_colours_sf <- st_as_sf(dulux_colours,
                      coords = c("x", "y"), # columns with the coordinates
                      crs = 4326) %>%       # EPSG:4326 for lng-lat
   st_transform(2193) %>% # convert to NZTM
   ## and make an RGB column
-  mutate(rgb = rgb(red / 255, 
-                   green / 255, 
-                   blue/ 255))
+  mutate(rgb = rgb(red / 255, green / 255, blue/ 255))
 
 # jitter any duplicate locations
 duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
@@ -212,12 +210,12 @@ nz <- st_read("nz.gpkg")
 ```{r}
 tm_shape(nz) +
   tm_borders() +
-  tm_shape(dulux_colours_sf) + 
+  tm_shape(dulux_colours_sf) +
   tm_dots(col = "rgb")
 ```
 
 # Better yet, Voronois
-Points aren't really much fun 
+Points aren't really much fun
 
 Instead, make up Voronois and clip to NZ
 
@@ -228,7 +226,7 @@ dulux_colours_vor <- dulux_colours_sf %>%
   st_cast() %>%
   st_as_sf() %>%
   st_join(dulux_colours_sf, left = FALSE) %>%
-  st_intersection(st_read("nz.gpkg")) 
+  st_intersection(st_read("nz.gpkg"))
 
 st_write(dulux_colours_vor, "dulux-colours-vor.gpkg", delete_dsn = TRUE)
 ```
@@ -240,7 +238,7 @@ dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 ```
 
 ```{r}
-tm_shape(dulux_colours_vor) + 
+tm_shape(dulux_colours_vor) +
   tm_polygons(col = "rgb", id = "placename", alpha = 0.75, border.col = "grey", lwd = 0.2) +
   tm_basemap("Esri.WorldTopoMap")
 ```

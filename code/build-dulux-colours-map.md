@@ -188,9 +188,7 @@ dulux_colours_sf <- st_as_sf(dulux_colours,
                      crs = 4326) %>%       # EPSG:4326 for lng-lat
   st_transform(2193) %>% # convert to NZTM
   ## and make an RGB column
-  mutate(rgb = rgb(red / 255,
-                   green / 255,
-                   blue/ 255))
+  mutate(rgb = rgb(red / 255, green / 255, blue/ 255))
 
 # jitter any duplicate locations
 duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
