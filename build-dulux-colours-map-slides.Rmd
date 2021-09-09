@@ -6,11 +6,13 @@ date: September 2021
 output: 
   revealjs::revealjs_presentation:
     incremental: TRUE
+    center: TRUE
     theme: simple
     transition: slide
     css: extra-styles.css
     reveal_options:
       slideNumber: TRUE
+      loop: TRUE
 ---
 
 # Libraries
@@ -189,7 +191,7 @@ dulux_colours <- read.csv("dulux-colours-xy.csv")
 
 Make the dataframe into a `sf` point dataset
 
-```{r}
+```{r results = FALSE}
 dulux_colours_sf <- st_as_sf(dulux_colours, 
                      coords = c("x", "y"), # the columns with the coordinates
                      crs = 4326) %>%       # the project EPSG:4326 for lng-lat
