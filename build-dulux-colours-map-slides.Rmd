@@ -183,8 +183,6 @@ write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
 # Making a map
-Get the geocoded dataset we made earlier
-
 ```{r echo = FALSE}
 dulux_colours <- read.csv("dulux-colours-xy.csv")
 ```
@@ -193,13 +191,21 @@ Make the dataframe into a `sf` point dataset
 
 ```{r results = FALSE}
 dulux_colours_sf <- st_as_sf(dulux_colours, 
-                     coords = c("x", "y"), # the columns with the coordinates
-                     crs = 4326) %>%       # the project EPSG:4326 for lng-lat
+                     coords = c("x", "y"), # columns with the coordinates
+                     crs = 4326) %>%       # EPSG:4326 for lng-lat
   st_transform(2193) %>% # convert to NZTM
   ## and make an RGB column
   mutate(rgb = rgb(red / 255, 
                    green / 255, 
                    blue/ 255))
+
+# jitter any duplicate locations
+duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
+                       duplicated(dulux_colours_sf$geometry, fromLast = TRUE))
+jittered_pts <- dulux_colours_sf %>%
+  slice(duplicate_pts) %>%
+  st_jitter(50)
+dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
