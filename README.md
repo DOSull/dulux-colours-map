@@ -7,7 +7,7 @@ Some alternative maps where I've interpolated RGB values at point locations to m
 
 + [Triangulation](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) based using `akima::interp` with `linear = TRUE`
 + [Inverse-distance weighting](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) using `spatstat::idw` with `power = 4`
-+ [Thin plate splines](ttps://dosull.github.io/dulux-colours-map/maps/splines.html) using `fields::Tps` with `m = 3`
++ [Thin plate splines](https://dosull.github.io/dulux-colours-map/maps/splines.html) using `fields::Tps` with `m = 3`
 
 The R code used to make the maps can be viewed [here](code/build-dulux-colours-map.md).
 
