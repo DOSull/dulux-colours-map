@@ -1,7 +1,7 @@
 # A web map from the Dulux colours of New Zealand
 This is just a demonstration of the flexibility of the R ecosystem for quickly putting together a [web map](https://dosull.github.io/dulux-colours-map/maps/).
 
-The [map](https://dosull.github.io/dulux-colours-map/map/) is a somewhat silly take on this [range of paints](https://www.dulux.co.nz/colour/colours-of-new-zealand).
+The map is a somewhat silly (but take on thisirrestible to a geographer) take on the [Dulux 'colours of New Zealand' range of paints](https://www.dulux.co.nz/colour/colours-of-new-zealand).
 
 Some alternative maps where I've interpolated RGB values at point locations to make a smoothed raster colour map are also available:
 
