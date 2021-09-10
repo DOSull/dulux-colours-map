@@ -19,7 +19,8 @@ library(jsonlite)
 Next, a bunch of data munging packages from the 'tidyverse'
 
 ```{r}
-library(plyr) # rbind.fill is useful for ragged data with missing entries
+library(tidyr)
+library(plyr) # rbind.fill useful for ragged data with missing entries
 library(dplyr)  
 library(magrittr)
 library(tibble)
@@ -27,13 +28,24 @@ library(stringr)
 ```
 
 ## Spatial
-And finally the R (vector) spatial packages
+Next, the basic R spatial packages
 
 ```{r}
 library(sf)
+library(raster)
 library(tmap)
 library(tmaptools) # for geocode_OSM
-tmap_mode("view")
+tmap_mode("view") # for web maps
+```
+
+## Interpolation
+Finally, a range of interpolation tools
+
+```{r}
+library(spatstat) # for IDW
+library(maptools)
+library(akima)    # for triangulation
+library(fields)   # for splines
 ```
 
 # Getting the colours
@@ -78,8 +90,11 @@ write.csv(df_colours, "dulux-colours-raw.csv", row.names = FALSE)
 ```
 
 ## Check we're all good
-```{r}
+```{r echo = FALSE}
 df_colours <- read.csv("dulux-colours-raw.csv")
+```
+
+```{r}
 head(df_colours)
 ```
 
@@ -127,16 +142,19 @@ write.csv(df_colours_tidied, "dulux-colours.csv", row.names = FALSE)
 ```
 
 # Build the spatial dataset
-Add `x` and `y` columns to our data for the coordinates---note that we reload from the saved file so as not to keep hitting the Dulux website
+Add `x` and `y` columns to our data for the coordinates
+
+```{r echo = FALSE}
+df_colours_tidied <- read.csv("dulux-colours.csv")
+```
 
 ```{r}
-df_colours_tidied <- read.csv("dulux-colours.csv")
 df_colours_tidied_xy <- df_colours_tidied %>%
   mutate(x = 0, y = 0)
 ```
 
 ## Geocode with `tmaptools::geocode_OSM`
-Code on the next slide:
+Code on the next slide
 
 + goes through all the unique placenames
 + appends as many `x` `y` coordinates as we have space for (due to the modifiers) from the geocoding results
@@ -161,29 +179,23 @@ for (placename in unique(df_colours_tidied_xy$placename)) {
   }
   Sys.sleep(0.5) # so as not to over-tax the geocoder
 }
-```
-
-## Remove anything we missed
-Another tidy up removing anything that didn't get geocoded
-
-```{r eval = FALSE}
+# Remove any we missed
 df_colours_tidied_xy <- df_colours_tidied_xy %>%
   filter(x != 0 & y != 0)
 
 write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
-# Making a map
-Get the geocoded dataset we made earlier
+# Making maps
 
-```{r}
-dulux_colours <- read.csv("dulux-colours-xy.csv")
+```{r echo = FALSE}
+df_colours_tidied_xy <- read.csv("dulux-colours-xy.csv")
 ```
 
 Make the dataframe into a `sf` point dataset
 
-```{r}
-dulux_colours_sf <- st_as_sf(dulux_colours,
+```{r eval = FALSE}
+dulux_colours_sf <- st_as_sf(df_colours_tidied_xy,
                      coords = c("x", "y"), # columns with the coordinates
                      crs = 4326) %>%       # EPSG:4326 for lng-lat
   st_transform(2193) %>% # convert to NZTM
@@ -201,23 +213,46 @@ dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
 
+Remember to update the dataframe of points with the jittered points
+
+```{r eval = FALSE}
+jittered_pts <- dulux_colours_sf %>%
+  st_coordinates() %>%
+  as_tibble()
+df_colours_tidied_xy <- df_colours_tidied_xy %>%
+  mutate(x = jittered_pts$X, y = jittered_pts$Y)
+write.csv(df_colours_tidied_xy, "dulux-colours-xy-jit.csv", row.names = TRUE)
+```
+
 ## And at last a map!
 
 ```{r}
 nz <- st_read("nz.gpkg")
 ```
 
+```{r echo = FALSE}
+dulux_colours_sf <- st_read("dulux-colours-pts.gpkg")
+df_colours_tidied_xy <- read.csv("dulux-colours-xy-jit.csv")
+```
+
 ```{r}
 tm_shape(nz) +
   tm_borders() +
   tm_shape(dulux_colours_sf) +
-  tm_dots(col = "rgb")
+  tm_dots(col = "rgb") + 
+  tm_basemap("Esri.WorldTopoMap")
 ```
 
-# Better yet, Voronois
-Points aren't really much fun
+# We can do better (depending on taste!)
+Points aren't really much fun, instead:
 
-Instead, make up Voronois and clip to NZ
++ [Voronoi polygons](#voronoi-polygons)
++ [Triangular facets](#triangulation)
++ [Inverse-distance weighted](#idw)
++ [Splines](#splines)
+
+# Voronoi polygons
+We can make Voronois and clip to NZ
 
 ```{r eval = FALSE}
 dulux_colours_vor <- dulux_colours_sf %>%
@@ -231,15 +266,135 @@ dulux_colours_vor <- dulux_colours_sf %>%
 st_write(dulux_colours_vor, "dulux-colours-vor.gpkg", delete_dsn = TRUE)
 ```
 
-## And map it
+## And map
 
-```{r}
+```{r echo = FALSE}
 dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 ```
 
 ```{r}
 tm_shape(dulux_colours_vor) +
-  tm_polygons(col = "rgb", id = "placename", alpha = 0.75, border.col = "grey", lwd = 0.2) +
+  tm_polygons(col = "rgb", id = "placename", 
+              alpha = 0.75, border.col = "grey", lwd = 0.2) +
+  tm_basemap("Esri.WorldTopoMap")
+```
+
+# Triangulation 
+Using the `akima::interp` package
+
+```{r eval = FALSE}
+components = c("red", "green", "blue")
+
+layers = list()
+for (component in components) {
+# the dimensions, nx, ny give ~2500m resolution
+layers[[component]] <- raster(
+  interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y, 
+         df_colours_tidied_xy[[component]],
+         nx = 402, ny = 591, linear = TRUE))
+}
+rgb.t <- brick(layers)
+crs(rgb.t) <- st_crs(nz)$wkt
+rgb.t <- mask(rgb.t, nz)
+
+writeRaster(rgb.t, "dulux-colours-tri.tif", overwrite = TRUE)
+```
+
+## And map
+
+```{r echo = FALSE}
+rgb.t <- raster("dulux-colours-tri.tif")
+```
+
+```{r}
+tm_shape(rgb.t) + 
+  tm_rgb() +
+  tm_basemap("Esri.WorldTopoMap")
+```
+
+# IDW
+Here we use the `spatstat::idw` function
+
+We have to make `spatstat::ppp` (point pattern) objects
+
+```{r eval = FALSE}
+## We need a window for the ppps
+W <- nz$geom %>%
+  st_buffer(1000) %>%
+  st_union() %>%
+  as("Spatial") %>%
+  as.owin()
+ 
+layers <- list()
+for (component in components) {
+  pp <- ppp(x = df_colours_tidied_xy$x, 
+            y = df_colours_tidied_xy$y, 
+            window = W, 
+            marks = df_colours_tidied_xy[[component]])
+  ## eps is the approximate resolution
+  layers[[component]] <- raster(idw(pp, eps = 2500, power = 4))
+}
+rgb.idw <- brick(layers)
+crs(rgb.idw) <- st_crs(nz)$wkt
+
+writeRaster(rgb.idw, "dulux-colours-idw.tif", overwrite = TRUE)
+```
+
+## And map
+
+```{r echo = FALSE}
+rgb.idw <- raster("dulux-colours-idw.tif")
+```
+
+```{r}
+tm_shape(rgb.idw) + 
+  tm_rgb() +
+  tm_basemap("Esri.WorldTopoMap")
+```
+
+# Splines 
+For this we use the `fields::Tps` (thin plate spline) function 
+
+We need an empty raster to interpolate into
+
+```{r eval = FALSE}
+r <- nz %>% 
+  st_make_grid(cellsize = 2500, what = "centers") %>%
+  st_coordinates() %>%
+  as_tibble() %>%
+  rename(x = X, y = Y) %>%
+  mutate(z = 0) %>%
+  rasterFromXYZ()
+```
+
+***
+
+Then we can interpolate as before
+
+```{r eval = FALSE}
+layers <- list()
+for (component in components) {
+  spline <- Tps(df_colours_tidied_xy[, c("x", "y")], 
+                df_colours_tidied_xy[[component]], 
+                scale.type = "unscaled", m = 3)
+  layers[[component]] <- interpolate(r, spline)
+}
+rgb.s <- brick(layers)
+crs(rgb.s) <- st_crs(nz)$wkt
+rgb.s <- mask(rgb.s, nz)
+
+writeRaster(rgb.s, "dulux-colours-spline.tif", overwrite = TRUE)
+```
+
+## And map
+
+```{r echo = FALSE}
+rgb.s <- raster("dulux-colours-spline.tif", overwrite = TRUE)
+```
+
+```{r}
+tm_shape(rgb.s) + 
+  tm_rgb() +
   tm_basemap("Esri.WorldTopoMap")
 ```
 
@@ -253,3 +408,61 @@ tm_shape(dulux_colours_vor) +
     + `sf` and `tmap` (for basic geospatial)
     + the _tidyverse_ packages
     + _RMarkdown_
+    
+    
+```{r echo = FALSE, eval = FALSE}
+get_rescale <- function(r1, r2) {
+  range1 <- r1[2] - r1[1]
+  range2 <- r2[2] - r2[1]
+  scale <- range2 / range1
+  return (function(x) {
+    return(r2[1] + scale * (x - r1[1]))
+  })
+}
+
+# rgb.s$red <- get_rescale(c(minValue(rgb.s$red), maxValue(rgb.s)), 
+#                          range(rgb$red))(rgb.s$red)
+# rgb.s$green <- get_rescale(c(minValue(rgb.s$green), maxValue(rgb.s$green)), 
+#                            range(rgb$green))(rgb.s$green)
+# rgb.s$blue <- get_rescale(c(minValue(rgb.s$blue), maxValue(rgb.s$blue)), 
+#                           range(rgb$blue))(rgb.s$blue)
+
+```
+
+```{r echo = FALSE, eval = FALSE}
+m1 <- tm_shape(vor) + 
+  tm_polygons(col = "rgb", border.col = "grey", lwd = 0.1) +
+  tm_layout(title = "Voronoi")
+m2 <- tm_shape(rgb.idw) +
+  tm_rgb() +
+  tm_layout(title = "IDW of rgb")
+m3 <- tm_shape(rgb.s) +
+  tm_rgb() + 
+  tm_layout(title = "Spline of rgb")
+
+tmap_arrange(m1, m2, m3, nrow = 1)
+```
+
+```{r echo = FALSE, eval = FALSE}
+get_CMYK <- Vectorize(function(R, G, B) {
+  Rn <- R / 255
+  Gn <- G / 255
+  Bn <- B / 255
+  K <- 1 - max(Rn, Gn, Bn)
+  C <- ifelse(K == 1, 0, (1 - Rn - K) / (1 - K))
+  M <- ifelse(K == 1, 0, (1 - Gn - K) / (1 - K))
+  Y <- ifelse(K == 1, 0, (1 - Bn - K) / (1 - K))
+  return(list(C = C, M = M, Y = Y, K = K));
+})
+
+get_R <- Vectorize(function(C, M, Y, K) {
+  return(255 * (1 - C) * (1 - K))
+})
+get_G <- Vectorize(function(C, M, Y, K) {
+  return(255 * (1 - M) * (1 - K))
+})
+get_B <- Vectorize(function(C, M, Y, K) {
+  return(255 * (1 - Y) * (1 - K))
+})
+```
+
