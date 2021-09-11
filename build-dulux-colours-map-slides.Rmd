@@ -196,7 +196,7 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
-# Making maps {data-background="fjordland.png"}
+# Making maps {data-background="westland.png"}
 
 ```{r echo = FALSE}
 df_colours_tidied_xy <- read.csv("dulux-colours-xy.csv")
@@ -223,7 +223,7 @@ dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
 
-## {data-background="fjordland.png"}
+## {data-background="westland.png"}
 
 Remember to update points dataframe with the jittered points
 
@@ -236,7 +236,7 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy-jit.csv", row.names = TRUE)
 ```
 
-## And at last a map! {data-background="fjordland.png"}
+## And at last a map! {data-background="westland.png"}
 
 ```{r message = FALSE, results = FALSE}
 nz <- st_read("nz.gpkg")
