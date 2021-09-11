@@ -287,11 +287,11 @@ components = c("red", "green", "blue")
 
 layers = list()
 for (component in components) {
-# the dimensions, nx, ny give ~2500m resolution
-layers[[component]] <- raster(
-  interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y,
-         df_colours_tidied_xy[[component]],
-         nx = 402, ny = 591, linear = TRUE))
+  # the dimensions, nx, ny give ~2500m resolution
+  layers[[component]] <- raster(
+    interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y,
+           df_colours_tidied_xy[[component]],
+           nx = 402, ny = 591, linear = TRUE))
 }
 rgb.t <- brick(layers)
 crs(rgb.t) <- st_crs(nz)$wkt
