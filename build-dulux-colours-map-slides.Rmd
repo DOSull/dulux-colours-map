@@ -16,17 +16,17 @@ output:
       loop: TRUE
 ---
 
-# Libraries
+# Libraries {data-background="otago.png"}
 We need a bunch of these...
 
-## JSON processing
+## JSON processing {data-background="otago.png"}
 First `jsonlite` for processing the colours data pulled from the website
 
 ```{r}
 library(jsonlite)
 ```
 
-## Data wrangling
+## Data wrangling {data-background="otago.png"}
 Next, a bunch of data munging packages from the 'tidyverse'
 
 ```{r message = FALSE}
@@ -38,7 +38,7 @@ library(tibble)
 library(stringr)
 ```
 
-## Spatial
+## Spatial {data-background="otago.png"}
 Next, the basic R spatial packages
 
 ```{r message = FALSE}
@@ -49,7 +49,7 @@ library(tmaptools) # for geocode_OSM
 tmap_mode("plot") # for static maps
 ```
 
-## Interpolation
+## Interpolation {data-background="otago.png"}
 Finally, a range of interpolation tools
 
 ```{r message = FALSE}
@@ -59,7 +59,7 @@ library(akima)    # for triangulation
 library(fields)   # for splines
 ```
 
-# Getting the colours
+# Getting the colours {data-background="bankes.png"}
 
 See [the Dulux website](https://www.dulux.co.nz/colour/colours-of-new-zealand) for what this is all about
 
@@ -71,7 +71,7 @@ colour_groups <- c("blues", "browns", "greens", "greys", "oranges",
 base_url <- "https://www.dulux.co.nz/content/duluxnz/home/colour/all-colours.categorycolour.json/all-colours/"
 ```
 
-## Retrieve and save the colours
+## Retrieve and save the colours {data-background="bankes.png"}
 The loop on the next slide
 
 + steps through the group names
@@ -80,7 +80,7 @@ The loop on the next slide
 + adds the colours information to a list
 + then we make the list into a single table using `bind_rows`
 
-***
+## {data-background="bankes.png"}
 
 ```{r eval = FALSE}
 colours <- list()
@@ -100,7 +100,7 @@ df_colours <- bind_rows(colours)
 write.csv(df_colours, "dulux-colours-raw.csv", row.names = FALSE)
 ```
 
-## Check we're all good
+## Check we're all good {data-background="bankes.png"}
 ```{r echo = FALSE}
 df_colours <- read.csv("dulux-colours-raw.csv")
 ```
@@ -109,7 +109,7 @@ df_colours <- read.csv("dulux-colours-raw.csv")
 head(df_colours)
 ```
 
-# Tidying up the names
+## Tidying up the names {data-background="bankes.png"}
 There are paint names with modifiers as suffixes for different shades of particular colours, and we need to handle this
 
 The modifiers are
@@ -117,7 +117,7 @@ The modifiers are
 paint_modifiers <- c("Half", "Quarter", "Double")
 ```
 
-## A _tidyverse_ pipeline
+## A _tidyverse_ pipeline {data-background="bankes.png"}
 Here’s one way to clean this up (there are others…)
 
 ```{r eval = FALSE}
@@ -152,7 +152,7 @@ df_colours_tidied <- df_colours %>%
 write.csv(df_colours_tidied, "dulux-colours.csv", row.names = FALSE)
 ```
 
-# Build the spatial dataset
+# Build the spatial dataset {data-background="taranaki.png"}
 Add `x` and `y` columns to our data for the coordinates
 
 ```{r echo = FALSE}
@@ -164,15 +164,15 @@ df_colours_tidied_xy <- df_colours_tidied %>%
   mutate(x = 0, y = 0)
 ```
 
-## Geocode with `tmaptools::geocode_OSM`
+## Geocode with `tmaptools::geocode_OSM` {data-background="taranaki.png"}
 Code on the next slide
 
 + goes through all the unique placenames
 + appends as many `x` `y` coordinates as we have space for (due to the modifiers) from the geocoding results
 
-***
+## {data-background="taranaki.png"}
 
-**Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly geocode and hit the OSM server)**
+Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly geocode and hit the OSM server)
 
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
@@ -197,7 +197,7 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy.csv", row.names = FALSE)
 ```
 
-# Making maps
+# Making maps {data-background="fjordland.png"}
 
 ```{r echo = FALSE}
 df_colours_tidied_xy <- read.csv("dulux-colours-xy.csv")
@@ -224,7 +224,7 @@ dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
 
-***
+## {data-background="fjordland.png"}
 
 Remember to update points dataframe with the jittered points
 
@@ -237,7 +237,7 @@ df_colours_tidied_xy <- df_colours_tidied_xy %>%
 write.csv(df_colours_tidied_xy, "dulux-colours-xy-jit.csv", row.names = TRUE)
 ```
 
-## And at last a map!
+## And at last a map! {data-background="fjordland.png"}
 
 ```{r message = FALSE, results = FALSE}
 nz <- st_read("nz.gpkg")
@@ -256,7 +256,7 @@ tm_shape(nz) +
   tm_basemap("Esri.WorldTopoMap")
 ```
 
-# We can do better (depending on taste!)
+# We can do better (depending on taste!) {data-background="northland.png"}
 Points aren't really much fun, instead:
 
 + [Voronoi polygons](#voronoi-polygons)
@@ -264,7 +264,7 @@ Points aren't really much fun, instead:
 + [Inverse-distance weighted](#idw)
 + [Splines](#splines)
 
-# Voronoi polygons
+## Voronoi polygons {data-background="northland.png"}
 We can make Voronois and clip to NZ
 
 ```{r eval = FALSE}
@@ -279,9 +279,9 @@ dulux_colours_vor <- dulux_colours_sf %>%
 st_write(dulux_colours_vor, "dulux-colours-vor.gpkg", delete_dsn = TRUE)
 ```
 
-## And map
+## {data-background="northland.png"}
 
-```{r echo = FALSE, message = FALSE}
+```{r echo = FALSE, message = FALSE, results = FALSE}
 dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 ```
 
@@ -292,7 +292,7 @@ tm_shape(dulux_colours_vor) +
   tm_basemap("Esri.WorldTopoMap")
 ```
 
-# Triangulation 
+## Triangulation {data-background="northland.png"}
 Using the `akima::interp` package
 
 ```{r eval = FALSE}
@@ -313,7 +313,7 @@ rgb.t <- mask(rgb.t, nz)
 writeRaster(rgb.t, "dulux-colours-tri.tif", overwrite = TRUE)
 ```
 
-## And map
+## {data-background="northland.png"}
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 rgb.t <- raster("dulux-colours-tri.tif")
@@ -325,7 +325,7 @@ tm_shape(rgb.t) +
   tm_basemap("Esri.WorldTopoMap")
 ```
 
-# IDW
+## IDW {data-background="northland.png"}
 Here we use the `spatstat::idw` function
 
 We have to make `spatstat::ppp` (point pattern) objects
@@ -353,7 +353,7 @@ crs(rgb.idw) <- st_crs(nz)$wkt
 writeRaster(rgb.idw, "dulux-colours-idw.tif", overwrite = TRUE)
 ```
 
-## And map
+## {data-background="northland.png"}
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 rgb.idw <- raster("dulux-colours-idw.tif")
@@ -365,7 +365,7 @@ tm_shape(rgb.idw) +
   tm_basemap("Esri.WorldTopoMap")
 ```
 
-# Splines 
+## Splines {data-background="northland.png"}
 For this we use the `fields::Tps` (thin plate spline) function 
 
 We need an empty raster to interpolate into
@@ -380,7 +380,7 @@ r <- nz %>%
   rasterFromXYZ()
 ```
 
-***
+## {data-background="northland.png"}
 
 Then we can interpolate as before
 
@@ -399,7 +399,7 @@ rgb.s <- mask(rgb.s, nz)
 writeRaster(rgb.s, "dulux-colours-spline.tif", overwrite = TRUE)
 ```
 
-## And map
+## {data-background="northland.png"}
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 rgb.s <- raster("dulux-colours-spline.tif", overwrite = TRUE)
