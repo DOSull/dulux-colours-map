@@ -5,7 +5,7 @@ The map is a somewhat silly (but take on thisirrestible to a geographer) take on
 
 Some alternative maps where I've interpolated RGB values at point locations to make a smoothed raster colour map are also available:
 
-+ [Triangulation](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) based using `akima::interp` with `linear = TRUE`
++ [Triangulation](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) based using `akima::interp` with `linear = TRUE` (this one is at ~500m resolution, where the others are more like 2500m)
 + [Inverse-distance weighting](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) using `spatstat::idw` with `power = 4`
 + [Thin plate splines](https://dosull.github.io/dulux-colours-map/maps/splines.html) using `fields::Tps` with `m = 3`
 
