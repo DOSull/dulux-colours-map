@@ -7,8 +7,9 @@ output:
   revealjs::revealjs_presentation:
     incremental: TRUE
     center: TRUE
-    theme: simple
+    theme: white
     transition: slide
+    background-transition: none
     css: extra-styles.css
     reveal_options:
       slideNumber: TRUE
@@ -45,7 +46,7 @@ library(sf)
 library(raster)
 library(tmap)
 library(tmaptools) # for geocode_OSM
-tmap_mode("plot") # for web maps
+tmap_mode("plot") # for static maps
 ```
 
 ## Interpolation
@@ -238,11 +239,11 @@ write.csv(df_colours_tidied_xy, "dulux-colours-xy-jit.csv", row.names = TRUE)
 
 ## And at last a map!
 
-```{r message = FALSE}
+```{r message = FALSE, results = FALSE}
 nz <- st_read("nz.gpkg")
 ```
 
-```{r echo = FALSE}
+```{r echo = FALSE, message = FALSE, results = FALSE}
 dulux_colours_sf <- st_read("dulux-colours-pts.gpkg")
 df_colours_tidied_xy <- read.csv("dulux-colours-xy-jit.csv")
 ```
@@ -299,11 +300,11 @@ components = c("red", "green", "blue")
 
 layers = list()
 for (component in components) {
-# the dimensions, nx, ny give ~2500m resolution
-layers[[component]] <- raster(
-  interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y, 
-         df_colours_tidied_xy[[component]],
-         nx = 402, ny = 591, linear = TRUE))
+  # the dimensions, nx, ny give ~2500m resolution
+  layers[[component]] <- raster(
+    interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y, 
+           df_colours_tidied_xy[[component]],
+           nx = 402, ny = 591, linear = TRUE))
 }
 rgb.t <- brick(layers)
 crs(rgb.t) <- st_crs(nz)$wkt
