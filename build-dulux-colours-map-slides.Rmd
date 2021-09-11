@@ -10,7 +10,7 @@ output:
     theme: white
     transition: slide
     background-transition: none
-    css: extra-styles.css
+    css: "slides/extra-styles.css"
     reveal_options:
       slideNumber: TRUE
       loop: TRUE
