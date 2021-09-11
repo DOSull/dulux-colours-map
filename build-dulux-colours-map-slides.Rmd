@@ -327,7 +327,7 @@ tm_shape(rgb.t) +
 ## IDW {data-background="northland.png"}
 Here we use the `spatstat::idw` function
 
-We have to make `spatstat::ppp` (point pattern) objects
+We need `spatstat::ppp` (point pattern) objects
 
 ```{r eval = FALSE}
 ## We need a window for the ppps

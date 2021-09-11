@@ -774,7 +774,7 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <section id="idw" class="slide level2" data-background="northland.png">
 <h2 data-background="northland.png">IDW</h2>
 <p>Here we use the <code>spatstat::idw</code> function</p>
-<p>We have to make <code>spatstat::ppp</code> (point pattern) objects</p>
+<p>We need <code>spatstat::ppp</code> (point pattern) objects</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## We need a window for the ppps</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>W <span class="ot">&lt;-</span> nz<span class="sc">$</span>geom <span class="sc">%&gt;%</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_buffer</span>(<span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
