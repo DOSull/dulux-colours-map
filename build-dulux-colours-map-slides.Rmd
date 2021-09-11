@@ -7,7 +7,7 @@ output:
   revealjs::revealjs_presentation:
     incremental: TRUE
     center: TRUE
-    theme: white
+    theme: sky
     transition: slide
     background-transition: none
     css: "slides/extra-styles.css"
@@ -31,7 +31,7 @@ Next, a bunch of data munging packages from the 'tidyverse'
 
 ```{r message = FALSE}
 library(tidyr)
-library(plyr) # rbind.fill useful for ragged data with missing entries
+library(plyr) ## rbind.fill for ragged data with missing entries
 library(dplyr)  
 library(magrittr)
 library(tibble)
@@ -45,18 +45,18 @@ Next, the basic R spatial packages
 library(sf)
 library(raster)
 library(tmap)
-library(tmaptools) # for geocode_OSM
-tmap_mode("plot") # for static maps
+library(tmaptools) ## for geocode_OSM
+tmap_mode("plot") ## for static maps
 ```
 
 ## Interpolation {data-background="otago.png"}
 Finally, a range of interpolation tools
 
 ```{r message = FALSE}
-library(spatstat) # for IDW
+library(spatstat) ## for IDW
 library(maptools)
-library(akima)    # for triangulation
-library(fields)   # for splines
+library(akima)    ## for triangulation
+library(fields)   ## for splines
 ```
 
 # Getting the colours {data-background="bankes.png"}
@@ -89,12 +89,12 @@ for (i in 1:length(colour_groups)) {
   json_url <- str_c(base_url, colour_group)
   json_file_name <- str_c(colour_group, ".json")
   json <- fromJSON(json_url, flatten = TRUE)
-  # make a local copy (just for convenience)
+  ## make a local copy (just for convenience)
   write_json(json, json_file_name)
-  # get the colours information and add to list
+  ## get the colours information and add to list
   the_colours <- rbind.fill(json$categoryColours$masterColour.colours)
   colours[[i]] <- the_colours
-  Sys.sleep(0.5) # pause to not annoy the the server  
+  Sys.sleep(0.5) ## pause to not annoy the the server  
 }
 df_colours <- bind_rows(colours)
 write.csv(df_colours, "dulux-colours-raw.csv", row.names = FALSE)
@@ -148,7 +148,6 @@ df_colours_tidied <- df_colours %>%
   ## throw away variables we no longer and reorder
   select(name, placename, modifier, red, green, blue)
 
-# save it so we have it for later
 write.csv(df_colours_tidied, "dulux-colours.csv", row.names = FALSE)
 ```
 
@@ -172,7 +171,7 @@ Code on the next slide
 
 ## {data-background="taranaki.png"}
 
-Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly geocode and hit the OSM server)
+**Best not to re-run this (it takes a good 10 minutes and it's not good to repeatedly geocode and hit the OSM server)**
 
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
@@ -188,9 +187,9 @@ for (placename in unique(df_colours_tidied_xy$placename)) {
       }  
     }
   }
-  Sys.sleep(0.5) # so as not to over-tax the geocoder
+  Sys.sleep(0.5) ## so as not to over-tax the geocoder
 }
-# Remove any we missed
+## Remove any we missed
 df_colours_tidied_xy <- df_colours_tidied_xy %>%
   filter(x != 0 & y != 0)
 
@@ -207,13 +206,13 @@ Make the dataframe into a `sf` point dataset
 
 ```{r eval = FALSE}
 dulux_colours_sf <- st_as_sf(df_colours_tidied_xy,
-                     coords = c("x", "y"), # columns with the coordinates
-                     crs = 4326) %>%       # EPSG:4326 for lng-lat
-  st_transform(2193) %>% # convert to NZTM
+                     coords = c("x", "y"), ## columns with the coordinates
+                     crs = 4326) %>%       ## EPSG:4326 for lng-lat
+  st_transform(2193) %>%                   ## convert to NZTM
   ## and make an RGB column
   mutate(rgb = rgb(red / 255, green / 255, blue/ 255))
 
-# jitter any duplicate locations
+## jitter any duplicate locations
 duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
                        duplicated(dulux_colours_sf$geometry, fromLast = TRUE))
 jittered_pts <- dulux_colours_sf %>%
@@ -300,7 +299,7 @@ components = c("red", "green", "blue")
 
 layers = list()
 for (component in components) {
-  # the dimensions, nx, ny give ~2500m resolution
+  ## the dimensions, nx, ny give ~2500m resolution
   layers[[component]] <- raster(
     interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y, 
            df_colours_tidied_xy[[component]],
