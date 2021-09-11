@@ -238,21 +238,22 @@ write.csv(df_colours_tidied_xy, "dulux-colours-xy-jit.csv", row.names = TRUE)
 
 ## And at last a map! {data-background="westland.png"}
 
-```{r message = FALSE, results = FALSE}
+```{r echo = FALSE, message = FALSE, results = FALSE}
 nz <- st_read("nz.gpkg")
 ```
 
 ```{r echo = FALSE, message = FALSE, results = FALSE}
 dulux_colours_sf <- st_read("dulux-colours-pts.gpkg")
 df_colours_tidied_xy <- read.csv("dulux-colours-xy-jit.csv")
+bbox <- bb(cx = 1.9e6, cy = 5.75e6, width = 3.2e5, height = 2.4e5)
 ```
 
 ```{r echo = FALSE}
-tm_shape(nz) +
+tm_shape(nz, bbox = bbox) +
   tm_borders() +
   tm_shape(dulux_colours_sf) +
-  tm_dots(col = "rgb") + 
-  tm_basemap("Esri.WorldTopoMap")
+  tm_dots(col = "rgb", size = 0.5) +
+  tm_text(text = "placename", size = 0.6, auto.placement = TRUE)
 ```
 
 # We can do better (depending on taste!) {data-background="northland.png"}
@@ -285,10 +286,8 @@ dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 ```
 
 ```{r echo = FALSE}
-tm_shape(dulux_colours_vor) +
-  tm_polygons(col = "rgb", id = "placename", 
-              alpha = 0.75, border.col = "grey", lwd = 0.2) +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(dulux_colours_vor, bbox = bbox) +
+  tm_polygons(col = "rgb", alpha = 0.75, border.col = "#ddeeff", lwd = 0.2)
 ```
 
 ## Triangulation {data-background="northland.png"}
@@ -319,9 +318,8 @@ rgb.t <- raster("dulux-colours-tri.tif")
 ```
 
 ```{r echo = FALSE}
-tm_shape(rgb.t) + 
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(rgb.t, bbox = bbox) + 
+  tm_rgb()
 ```
 
 ## IDW {data-background="northland.png"}
@@ -359,9 +357,8 @@ rgb.idw <- raster("dulux-colours-idw.tif")
 ```
 
 ```{r echo = FALSE}
-tm_shape(rgb.idw) + 
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(rgb.idw, bbox = bbox) + 
+  tm_rgb()
 ```
 
 ## Splines {data-background="northland.png"}
@@ -405,9 +402,8 @@ rgb.s <- raster("dulux-colours-spline.tif", overwrite = TRUE)
 ```
 
 ```{r echo = FALSE}
-tm_shape(rgb.s) + 
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(rgb.s, bbox = bbox) + 
+  tm_rgb()
 ```
 
 # Credits and more
@@ -443,7 +439,7 @@ get_rescale <- function(r1, r2) {
 
 ```{r echo = FALSE, eval = FALSE}
 m1 <- tm_shape(vor) + 
-  tm_polygons(col = "rgb", border.col = "grey", lwd = 0.1) +
+  tm_polygons(col = "rgb", border.col = "#ddeeff", lwd = 0.1) +
   tm_layout(title = "Voronoi")
 m2 <- tm_shape(rgb.idw) +
   tm_rgb() +
