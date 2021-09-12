@@ -239,8 +239,7 @@ df_colours_tidied_xy <- read.csv("dulux-colours-xy-jit.csv")
 tm_shape(nz) +
   tm_borders() +
   tm_shape(dulux_colours_sf) +
-  tm_dots(col = "rgb") +
-  tm_basemap("Esri.WorldTopoMap")
+  tm_dots(col = "rgb")
 ```
 
 # We can do better (depending on taste!)
@@ -274,9 +273,10 @@ dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 
 ```{r}
 tm_shape(dulux_colours_vor) +
+  tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
+  tm_shape(dulux_colours_vor) +
   tm_polygons(col = "rgb", id = "placename",
-              alpha = 0.75, border.col = "grey", lwd = 0.2) +
-  tm_basemap("Esri.WorldTopoMap")
+              alpha = 0.75, border.col = "grey", lwd = 0.2)
 ```
 
 # Triangulation
@@ -287,11 +287,11 @@ components = c("red", "green", "blue")
 
 layers = list()
 for (component in components) {
-  # the dimensions, nx, ny give ~2500m resolution
+  # the dimensions, nx, ny give ~500m resolution
   layers[[component]] <- raster(
     interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y,
            df_colours_tidied_xy[[component]],
-           nx = 402, ny = 591, linear = TRUE))
+           nx = 2010, ny = 2955, linear = TRUE))
 }
 rgb.t <- brick(layers)
 crs(rgb.t) <- st_crs(nz)$wkt
@@ -307,9 +307,10 @@ rgb.t <- raster("dulux-colours-tri.tif")
 ```
 
 ```{r}
-tm_shape(rgb.t) +
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(dulux_colours_vor) +
+  tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
+  tm_shape(rgb.t) +
+  tm_rgb()
 ```
 
 # IDW
@@ -348,9 +349,10 @@ rgb.idw <- raster("dulux-colours-idw.tif")
 ```
 
 ```{r}
-tm_shape(rgb.idw) +
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(dulux_colours_vor) +
+  tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
+  tm_shape(rgb.idw) +
+  tm_rgb()
 ```
 
 # Splines
@@ -394,9 +396,10 @@ rgb.s <- raster("dulux-colours-spline.tif", overwrite = TRUE)
 ```
 
 ```{r}
-tm_shape(rgb.s) +
-  tm_rgb() +
-  tm_basemap("Esri.WorldTopoMap")
+tm_shape(dulux_colours_vor) +
+  tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
+  tm_shape(rgb.s) +
+  tm_rgb()
 ```
 
 # Credits and more
