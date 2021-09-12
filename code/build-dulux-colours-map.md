@@ -319,7 +319,8 @@ We have to make `spatstat::ppp` (point pattern) objects
 
 ```{r eval = FALSE}
 ## We need a window for the ppps
-W <- nz$geom %>%
+W <- nz %>%
+  st_geometry() %>%
   st_buffer(1000) %>%
   st_union() %>%
   as("Spatial") %>%
