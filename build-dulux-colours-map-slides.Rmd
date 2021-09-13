@@ -1,5 +1,5 @@
 ---
-title: "Building a web map of the Dulux colours of New Zealand using R"
+title: "Mapping the Dulux colours of New Zealand using R"
 author: "David O'Sullivan"
 date: September 2021
 
