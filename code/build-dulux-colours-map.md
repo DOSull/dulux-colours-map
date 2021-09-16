@@ -1,5 +1,5 @@
 ---
-title: "Building a web map of the Dulux colours of New Zealand using R"
+title: "Mapping the Dulux colours of New Zealand using R"
 author: "David O'Sullivan"
 date: September 2021
 output: html_document
@@ -249,6 +249,7 @@ Points aren't really much fun, instead:
 + [Triangular facets](#triangulation)
 + [Inverse-distance weighted](#idw)
 + [Splines](#splines)
++ [Areal interpolation to SA2s](#areal-interpolation)
 
 # Voronoi polygons
 We can make Voronois and clip to NZ
@@ -402,6 +403,34 @@ tm_shape(dulux_colours_vor) +
   tm_rgb()
 ```
 
+## Areal interpolation
+
+We can also do weighted mixing by areas of overlap with any other set of areas from the Voronois.
+
+```{r eval = FALSE}
+sa2 <- st_read("sa2-generalised.gpkg")
+
+dulux_colours_sa2 <- dulux_colours_vor %>%
+  select(red:blue) %>%
+  st_interpolate_aw(sa2, extensive = FALSE) %>%
+  mutate(rgb = rgb(red / 256, green / 256, blue / 256),
+         name = sa2$SA22018_V1_00_NAME)
+
+st_write(dulux_colours_sa2, "dulux-colours-sa2.gpkg", delete_dsn = TRUE)
+```
+
+## And map
+
+```{r echo = FALSE}
+dulux_colours_sa2 <- st_read("dulux-colours-sa2.gpkg")
+
+tm_shape(dulux_colours_vor) +
+  tm_fill(col = "rgb", id = "placename") +
+  tm_shape(dulux_colours_sa2) +
+  tm_fill(col = "rgb", id = "name")
+```
+
+
 # Credits and more
 
 + Maptime!
@@ -412,60 +441,3 @@ tm_shape(dulux_colours_vor) +
     + `sf` and `tmap` (for basic geospatial)
     + the _tidyverse_ packages
     + _RMarkdown_
-
-
-```{r echo = FALSE, eval = FALSE}
-get_rescale <- function(r1, r2) {
-  range1 <- r1[2] - r1[1]
-  range2 <- r2[2] - r2[1]
-  scale <- range2 / range1
-  return (function(x) {
-    return(r2[1] + scale * (x - r1[1]))
-  })
-}
-
-# rgb.s$red <- get_rescale(c(minValue(rgb.s$red), maxValue(rgb.s)),
-#                          range(rgb$red))(rgb.s$red)
-# rgb.s$green <- get_rescale(c(minValue(rgb.s$green), maxValue(rgb.s$green)),
-#                            range(rgb$green))(rgb.s$green)
-# rgb.s$blue <- get_rescale(c(minValue(rgb.s$blue), maxValue(rgb.s$blue)),
-#                           range(rgb$blue))(rgb.s$blue)
-
-```
-
-```{r echo = FALSE, eval = FALSE}
-m1 <- tm_shape(vor) +
-  tm_polygons(col = "rgb", border.col = "grey", lwd = 0.1) +
-  tm_layout(title = "Voronoi")
-m2 <- tm_shape(rgb.idw) +
-  tm_rgb() +
-  tm_layout(title = "IDW of rgb")
-m3 <- tm_shape(rgb.s) +
-  tm_rgb() +
-  tm_layout(title = "Spline of rgb")
-
-tmap_arrange(m1, m2, m3, nrow = 1)
-```
-
-```{r echo = FALSE, eval = FALSE}
-get_CMYK <- Vectorize(function(R, G, B) {
-  Rn <- R / 255
-  Gn <- G / 255
-  Bn <- B / 255
-  K <- 1 - max(Rn, Gn, Bn)
-  C <- ifelse(K == 1, 0, (1 - Rn - K) / (1 - K))
-  M <- ifelse(K == 1, 0, (1 - Gn - K) / (1 - K))
-  Y <- ifelse(K == 1, 0, (1 - Bn - K) / (1 - K))
-  return(list(C = C, M = M, Y = Y, K = K));
-})
-
-get_R <- Vectorize(function(C, M, Y, K) {
-  return(255 * (1 - C) * (1 - K))
-})
-get_G <- Vectorize(function(C, M, Y, K) {
-  return(255 * (1 - M) * (1 - K))
-})
-get_B <- Vectorize(function(C, M, Y, K) {
-  return(255 * (1 - Y) * (1 - K))
-})
-```

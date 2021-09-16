@@ -8,6 +8,7 @@ Some alternative maps where I've interpolated RGB values at point locations to m
 + [Triangulation](https://dosull.github.io/dulux-colours-map/maps/triangulation.html) based using `akima::interp` with `linear = TRUE` (this one is at ~500m resolution, where the others are more like 2500m)
 + [Inverse-distance weighting](https://dosull.github.io/dulux-colours-map/maps/idw.html) using `spatstat::idw` with `power = 4`
 + [Thin plate splines](https://dosull.github.io/dulux-colours-map/maps/splines.html) using `fields::Tps` with `m = 3`
++ [Areal interpolation to census areas](https://dosull.github.io/dulux-colours-map/maps/areal-interpolation.html) using `sf::st_interpolate_aw`
 
 The R code used to make the maps can be viewed [here](code/build-dulux-colours-map.md).
 
