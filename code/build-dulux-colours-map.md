@@ -111,8 +111,6 @@ Here’s one way to clean this up (there are others…)
 
 ```{r eval = FALSE}
 df_colours_tidied <- df_colours %>%
-  ## remove some columns we won't be needing
-  select(-id, -baseId, -woodType, -coats) %>%
   ## separate the name components, filling from the left with NAs if <5
   separate(name, into = c("p1", "p2", "p3", "p4", "p5"), sep = " ",
            remove = FALSE, fill = "left") %>%
