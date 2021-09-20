@@ -76,9 +76,9 @@ colours <- list()
 for (i in 1:length(colour_groups)) {
   colour_group <- colour_groups[i]
   json_url <- str_c(base_url, colour_group)
-  json_file_name <- str_c(colour_group, ".json")
   json <- fromJSON(json_url, flatten = TRUE)
   # make a local copy (just for convenience)
+  json_file_name <- str_c(colour_group, ".json")
   write_json(json, json_file_name)
   # get the colours information and add to list
   the_colours <- rbind.fill(json$categoryColours$masterColour.colours)
