@@ -193,10 +193,10 @@ df_colours_tidied_xy <- read.csv("dulux-colours-xy.csv")
 Make the dataframe into a `sf` point dataset
 
 ```{r eval = FALSE}
-dulux_colours_sf <- st_as_sf(df_colours_tidied_xy,
-                     coords = c("x", "y"), # columns with the coordinates
-                     crs = 4326) %>%       # EPSG:4326 for lng-lat
-  st_transform(2193) %>% # convert to NZTM
+dulux_colours_sf <- df_colours_tidied_xy %>%
+  st_as_sf(coords = c("x", "y"), ## columns with the coordinates
+           crs = 4326) %>%       ## EPSG:4326 for lng-lat
+  st_transform(2193) %>%         ## convert to NZTM
   ## and make an RGB column
   mutate(rgb = rgb(red / 255, green / 255, blue/ 255))
 
