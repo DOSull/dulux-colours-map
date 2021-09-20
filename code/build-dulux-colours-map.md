@@ -421,13 +421,14 @@ st_write(dulux_colours_sa2, "dulux-colours-sa2.gpkg", delete_dsn = TRUE)
 
 ```{r echo = FALSE}
 dulux_colours_sa2 <- st_read("dulux-colours-sa2.gpkg")
+```
 
+```{r}
 tm_shape(dulux_colours_vor) +
   tm_fill(col = "rgb", id = "placename") +
   tm_shape(dulux_colours_sa2) +
-  tm_fill(col = "rgb", id = "name")
+  tm_polygons(col = "rgb", id = "name", border.col = "white", lwd = 0.2)
 ```
-
 
 # Credits and more
 

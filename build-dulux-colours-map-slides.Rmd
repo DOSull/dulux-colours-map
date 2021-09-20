@@ -430,7 +430,7 @@ dulux_colours_sa2 <- st_read("dulux-colours-sa2.gpkg")
 
 ```{r echo = FALSE}
 tm_shape(dulux_colours_sa2, bbox = bbox) +
-  tm_fill(col = "rgb", id = "name")
+  tm_polygons(col = "rgb", id = "name", border.col = "white", lwd = 0.2)
 ```
 
 
