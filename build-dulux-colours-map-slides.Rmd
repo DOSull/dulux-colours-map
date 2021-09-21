@@ -451,7 +451,7 @@ tm_shape(dulux_colours_sa2, bbox = bbox) +
 ```
 
 
-# Credits and more
+# Credits and more {data-background="fjordland.png"}
 
 + Maptime!
 + See [github.com/DOSull/dulux-colours-map](https://github.com/DOSull/dulux-colours-map) for the code
