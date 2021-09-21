@@ -132,7 +132,7 @@ df_colours_tidied <- df_colours %>%
                            "Passage Rock",
                            "Auckland Islands",
                            "Cossack Rock")) %>%
-  ## throw away variables we no longer and reorder
+  ## throw away variables we no longer need and reorder
   select(name, placename, modifier, red, green, blue)
 
 # save it so we have it for later
@@ -164,7 +164,8 @@ Code on the next slide
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
   address <- str_c(placename, "New Zealand", sep = ", ")
-  geocode <- geocode_OSM(address, as.data.frame = TRUE, return.first.only = FALSE)
+  geocode <- geocode_OSM(address, as.data.frame = TRUE, 
+                         return.first.only = FALSE)
   num_geocodes <- nrow(geocode)
   matching_rows <- which(df_colours_tidied_xy$placename == placename)
   for (i in 1:length(matching_rows)) {
@@ -202,7 +203,8 @@ dulux_colours_sf <- df_colours_tidied_xy %>%
 
 # jitter any duplicate locations
 duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
-                       duplicated(dulux_colours_sf$geometry, fromLast = TRUE))
+                       duplicated(dulux_colours_sf$geometry, 
+                                  fromLast = TRUE))
 jittered_pts <- dulux_colours_sf %>%
   slice(duplicate_pts) %>%
   st_jitter(50)
@@ -211,7 +213,7 @@ dulux_colours_sf[duplicate_pts, ]$geometry <- jittered_pts$geometry
 st_write(dulux_colours_sf, "dulux-colours-pts.gpkg", delete_dsn = TRUE)
 ```
 
-Remember to update the dataframe of points with the jittered points
+Update the dataframe of points with the jittered points
 
 ```{r eval = FALSE}
 jittered_pts <- dulux_colours_sf %>%
@@ -232,6 +234,8 @@ nz <- st_read("nz.gpkg")
 dulux_colours_sf <- st_read("dulux-colours-pts.gpkg")
 df_colours_tidied_xy <- read.csv("dulux-colours-xy-jit.csv")
 ```
+
+Using the `tmap` package
 
 ```{r}
 tm_shape(nz) +
@@ -436,7 +440,7 @@ tm_shape(dulux_colours_vor) +
 + See [github.com/DOSull/dulux-colours-map](https://github.com/DOSull/dulux-colours-map) for the code
 + See the same place for other odds and ends I do (including my classes at Vic!)
 + All the amazing people behind:
-    + _R_ and _RStudio
+    + _R_ and _RStudio_
     + `sf` and `tmap` (for basic geospatial)
     + the _tidyverse_ packages
     + _RMarkdown_
