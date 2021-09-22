@@ -365,12 +365,7 @@ We need an empty raster to interpolate into
 
 ```{r eval = FALSE}
 r <- nz %>% 
-  st_make_grid(cellsize = 2500, what = "centers") %>%
-  st_coordinates() %>%
-  as_tibble() %>%
-  rename(x = X, y = Y) %>%
-  mutate(z = 0) %>%
-  rasterFromXYZ()
+  raster(resolution = 2500)
 ```
 
 ***

@@ -164,7 +164,7 @@ Code on the next slide
 ```{r eval = FALSE}
 for (placename in unique(df_colours_tidied_xy$placename)) {
   address <- str_c(placename, "New Zealand", sep = ", ")
-  geocode <- geocode_OSM(address, as.data.frame = TRUE, 
+  geocode <- geocode_OSM(address, as.data.frame = TRUE,
                          return.first.only = FALSE)
   num_geocodes <- nrow(geocode)
   matching_rows <- which(df_colours_tidied_xy$placename == placename)
@@ -194,7 +194,7 @@ df_colours_tidied_xy <- read.csv("dulux-colours-xy.csv")
 Make the dataframe into a `sf` point dataset
 
 ```{r eval = FALSE}
-dulux_colours_sf <- df_colours_tidied_xy %>% 
+dulux_colours_sf <- df_colours_tidied_xy %>%
   st_as_sf(coords = c("x", "y"), ## columns with the coordinates
            crs = 4326) %>%       ## EPSG:4326 for lng-lat
   st_transform(2193) %>%         ## convert to NZTM
@@ -203,7 +203,7 @@ dulux_colours_sf <- df_colours_tidied_xy %>%
 
 # jitter any duplicate locations
 duplicate_pts <- which(duplicated(dulux_colours_sf$geometry) |
-                       duplicated(dulux_colours_sf$geometry, 
+                       duplicated(dulux_colours_sf$geometry,
                                   fromLast = TRUE))
 jittered_pts <- dulux_colours_sf %>%
   slice(duplicate_pts) %>%
@@ -278,11 +278,11 @@ dulux_colours_vor <- st_read("dulux-colours-vor.gpkg")
 tm_shape(dulux_colours_vor) +
   tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
   tm_shape(dulux_colours_vor) +
-  tm_polygons(col = "rgb", id = "placename", 
+  tm_polygons(col = "rgb", id = "placename",
               alpha = 0.75, border.col = "grey", lwd = 0.2)
 ```
 
-# Triangulation 
+# Triangulation
 Using the `akima::interp` package
 
 ```{r eval = FALSE}
@@ -292,7 +292,7 @@ layers = list()
 for (component in components) {
   # the dimensions, nx, ny give ~500m resolution
   layers[[component]] <- raster(
-    interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y, 
+    interp(df_colours_tidied_xy$x, df_colours_tidied_xy$y,
            df_colours_tidied_xy[[component]],
            nx = 2010, ny = 2955, linear = TRUE))
 }
@@ -312,7 +312,7 @@ rgb.t <- raster("dulux-colours-tri.tif")
 ```{r}
 tm_shape(dulux_colours_vor) +
   tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
-  tm_shape(rgb.t) + 
+  tm_shape(rgb.t) +
   tm_rgb()
 ```
 
@@ -329,12 +329,12 @@ W <- nz %>%
   st_union() %>%
   as("Spatial") %>%
   as.owin()
- 
+
 layers <- list()
 for (component in components) {
-  pp <- ppp(x = df_colours_tidied_xy$x, 
-            y = df_colours_tidied_xy$y, 
-            window = W, 
+  pp <- ppp(x = df_colours_tidied_xy$x,
+            y = df_colours_tidied_xy$y,
+            window = W,
             marks = df_colours_tidied_xy[[component]])
   ## eps is the approximate resolution
   layers[[component]] <- raster(idw(pp, eps = 2500, power = 4))
@@ -354,23 +354,18 @@ rgb.idw <- raster("dulux-colours-idw.tif")
 ```{r}
 tm_shape(dulux_colours_vor) +
   tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
-  tm_shape(rgb.idw) + 
+  tm_shape(rgb.idw) +
   tm_rgb()
 ```
 
-# Splines 
-For this we use the `fields::Tps` (thin plate spline) function 
+# Splines
+For this we use the `fields::Tps` (thin plate spline) function
 
 We need an empty raster to interpolate into
 
 ```{r eval = FALSE}
-r <- nz %>% 
-  st_make_grid(cellsize = 2500, what = "centers") %>%
-  st_coordinates() %>%
-  as_tibble() %>%
-  rename(x = X, y = Y) %>%
-  mutate(z = 0) %>%
-  rasterFromXYZ()
+r <- nz %>%
+  raster(resolution = 2500)
 ```
 
 ***
@@ -380,8 +375,8 @@ Then we can interpolate as before
 ```{r eval = FALSE}
 layers <- list()
 for (component in components) {
-  spline <- Tps(df_colours_tidied_xy[, c("x", "y")], 
-                df_colours_tidied_xy[[component]], 
+  spline <- Tps(df_colours_tidied_xy[, c("x", "y")],
+                df_colours_tidied_xy[[component]],
                 scale.type = "unscaled", m = 3)
   layers[[component]] <- interpolate(r, spline)
 }
@@ -401,7 +396,7 @@ rgb.s <- raster("dulux-colours-spline.tif", overwrite = TRUE)
 ```{r}
 tm_shape(dulux_colours_vor) +
   tm_polygons(alpha = 0, border.col = "lightgrey", lwd = 0.5) +
-  tm_shape(rgb.s) + 
+  tm_shape(rgb.s) +
   tm_rgb()
 ```
 
@@ -429,7 +424,7 @@ dulux_colours_sa2 <- st_read("dulux-colours-sa2.gpkg")
 
 ```{r}
 tm_shape(dulux_colours_vor) +
-  tm_fill(col = "rgb", id = "placename") + 
+  tm_fill(col = "rgb", id = "placename") +
   tm_shape(dulux_colours_sa2) +
   tm_polygons(col = "rgb", id = "name", border.col = "white", lwd = 0.2)
 ```
