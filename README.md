@@ -15,3 +15,5 @@ The R code used to make the maps can be viewed [here](code/build-dulux-colours-m
 Running the code will produce quite a few data files, which are _not_ posted here.
 
 The annotated output of the [RMarkdown](https://rmarkdown.rstudio.com/) of the code can be [viewed here](https://dosull.github.io/dulux-colours-map/code/). This was lightly modified to make [these slides](https://dosull.github.io/dulux-colours-map/slides/) for a Maptime! presentation in September 2021.
+
+**Note that as I continue to learn more about the various R packages used here the code will continue to be tweaked. For the record the [version of the slideshow presented at Maptime! on 22 September 2021 is here](https://dosull.github.io/dulux-colours-map/slides/maptime-slides.html).**
